@@ -10,7 +10,7 @@
 // Particle
 typedef struct Particle {
     Vector2 pos;
-    Vector2 vel;
+    Vector2 prv;
     Vector2 acc;
     float mass;
 } Particle;
@@ -32,27 +32,21 @@ static void collideParticle(struct Particle *particle, Vector2 center, float r)
     {
         Vector2 normal = Vector2Normalize(Vector2Subtract(particle->pos, center));
         particle->pos = Vector2Subtract(particle->pos, Vector2Scale(normal, perimeterDistance));
-        particle->vel = Vector2Negate(particle->vel);
+        //particle->vel = Vector2Negate(particle->vel);
     }
 }
 
 static void updateParticle(struct Particle *particle, double dt)
 {
-    particle->pos.x += particle->vel.x * dt + particle->acc.x * (dt * dt * 0.5);
-    particle->pos.y += particle->vel.y * dt + particle->acc.y * (dt * dt * 0.5);
-    Vector2 newAcc = applyForces();
-    particle->vel.x += (particle->acc.x + newAcc.x) * (dt * 0.5);
-    particle->vel.y += (particle->acc.y + newAcc.y) * (dt * 0.5);
-    particle->acc = newAcc;
+    // Compute how much we moved
+    const Vector2 displacement = Vector2Subtract(particle->pos, particle->prv);
+    // Update position
+    particle->prv = particle->pos;
+    particle->pos = Vector2Add(Vector2Add(particle->pos, displacement), Vector2Scale(particle->acc, dt * dt));
+    // Reset acceleration
+    particle->acc = applyForces();
 
     collideParticle(particle, (Vector2) { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 }, 200.0);
-}
-
-static void initParticle(struct Particle *st, struct Vector2 *pos, struct Vector2 *vel, struct Vector2 *acc)
-{
-    st->pos = *pos;
-    st->vel = *vel;
-    st->acc = *acc;
 }
 
 int main(void)
@@ -60,29 +54,29 @@ int main(void)
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(60);
 
-    Texture2D texture = LoadTexture(ASSETS_PATH"test.png"); // Check README.md for how this works
     Particle particle = {
-        {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2},
-        {25.0, 0.0},
-        {0.0, 0.0},
-        10.0
+        {SCREEN_WIDTH / 2      , SCREEN_HEIGHT / 2},
+        {SCREEN_WIDTH / 2 - 2  , SCREEN_HEIGHT / 2},
+        {0.0                   , 0.0              },
+         10.0
     };
 
-    float speedScale = 5;
+    const float speedScale = 5;
 
     while (!WindowShouldClose())
     {
+        updateParticle(&particle, GetFrameTime() * speedScale);
+        
         BeginDrawing();
 
         ClearBackground(BLACK);
 
         DrawCircle(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 200, RAYWHITE);
         DrawCircleV(particle.pos, particle.mass, PURPLE);
-        updateParticle(&particle, GetFrameTime() * speedScale);
-
-        //printf("%f\t%f\n", particle.pos.x, particle.pos.y);
 
         EndDrawing();
+
+        //printf("%f\t%f\n", particle.pos.x, particle.pos.y);
     }
 
     CloseWindow();
