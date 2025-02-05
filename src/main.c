@@ -26,13 +26,17 @@ static struct Vector2 applyForces()
 
 static void collideParticle(struct Particle *particle, Vector2 center, float r)
 {
-    float perimeterDistance = Vector2Length(Vector2Subtract(particle->pos, center)) + particle->mass - r;
+    Vector2 directionParticle = Vector2Subtract(particle->pos, center);
+    float directionLength = Vector2Length(directionParticle);
     
-    if (perimeterDistance > 0)
+    if (directionLength > r - particle->mass)
     {
-        Vector2 normal = Vector2Normalize(Vector2Subtract(particle->pos, center));
-        particle->pos = Vector2Subtract(particle->pos, Vector2Scale(normal, perimeterDistance));
-        //particle->vel = Vector2Negate(particle->vel);
+        Vector2 normal = Vector2Scale(directionParticle, 1 / directionLength);
+        particle->pos = Vector2Subtract(particle->pos, Vector2Scale(normal, directionLength + particle->mass - r));
+
+        const Vector2 displacement = Vector2Subtract(particle->pos, particle->prv);
+
+        particle->prv = Vector2Add(particle->pos, Vector2Negate(Vector2Reflect(displacement, normal)));
     }
 }
 
