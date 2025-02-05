@@ -34,9 +34,9 @@ static void collideParticle(struct Particle *particle, Vector2 center, float r)
         Vector2 normal = Vector2Scale(directionParticle, 1 / directionLength);
         particle->pos = Vector2Subtract(particle->pos, Vector2Scale(normal, directionLength + particle->mass - r));
 
-        const Vector2 displacement = Vector2Subtract(particle->pos, particle->prv);
+        //const Vector2 displacement = Vector2Subtract(particle->pos, particle->prv);
 
-        particle->prv = Vector2Add(particle->pos, Vector2Negate(Vector2Reflect(displacement, normal)));
+        //particle->prv = Vector2Add(particle->pos, Vector2Negate(Vector2Reflect(displacement, normal)));
     }
 }
 
